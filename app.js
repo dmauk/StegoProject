@@ -26,6 +26,8 @@ var port = process.env.PORT || 8080;        // set our port
 var router = express.Router();              // get an instance of the express Router
 
 router.use(function(req, res, next) {
+	res.header("Access-Control-Allow-Origin", "*");
+ 	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next(); // make sure we go to the next routes and don't stop here
 });
 
@@ -39,6 +41,13 @@ router.get('/', function(req, res) {
 // req.body gives key=>value pairs in JSON
 
 router.route('/embed')
+    .get(function(req,res){
+    	var result = {};
+    	result.error = true;
+    	result.message = "Invalid Request. Only POST is exposed for this command.";
+    	result.arguments = "cover, embed, [password], [filetype]. [optional]";
+    	res.status(400).json(result);
+    })
     .post(function(req, res) {
 		// Has parameters cover, embed, [password], and [filetype]
 		// returns ID for embedded file
@@ -67,20 +76,72 @@ router.route('/embed')
 				hasCalled = true;
 			}
 		});
+    })
+    .put(function(req,res){
+    	var result = {};
+    	result.error = true;
+    	result.message = "Invalid Request. Only POST is exposed for this command.";
+    	result.arguments = "cover, embed, [password], [filetype]. [optional]";
+    	res.status(400).json(result);
+    })
+    .delete(function(req,res){
+    	var result = {};
+    	result.error = true;
+    	result.message = "Invalid Request. Only POST is exposed for this command.";
+    	result.arguments = "cover, embed, [password], [filetype]. [optional]";
+    	res.status(400).json(result);
     });
-
+router.route('/info/')
+	.post(function(req,res){
+		var result = {};
+		result.message = "";
+		var coverF = req.files.cover;
+		var password;
+		if(typeof req.password == 'undefined'){
+			password = "";
+		}
+		var command = ["info"];
+		command.push(coverF.path,"-p",password);
+		var spawn = require('child_process').spawn;
+		var child = spawn('steghide', command);
+		child.stdout.on('data', function (data){
+			console.log(data.toString());
+			if(data.toString().indexOf("capacity") > -1){
+				result.message = data.toString();
+				res.json(result);
+			} else {
+				// Do Nothing
+			}
+		});
+	});
 router.route('/retrieve/:id')
 	.get(function(req,res){
 		var id = req.params.id;
+		console.log("Retrieving: ", id);
 		res.sendFile(id, {root:outputDir}, function (err) {
 		    if (err) {
 		      errLog(err);
+		      console.log(err);
 		      res.status(err.status).end();
 		    }
 		    else {
 		      console.log('Sent:', id);
 			}
 		});
+	})
+	.post(function(req,res){
+		var result = {};
+    	result.error = true;
+    	result.message = "Invalid Request. Only GET and DELETE are exposed for this command.";
+    	result.arguments = "/retrieve/:id";
+    	res.status(400).json(result);
+	})
+	.put(function(req,res){
+		var result = {};
+    	result.error = true;
+    	result.message = "Invalid Request. Only GET and DELETE are exposed for this command.";
+    	result.arguments = "/retrieve/:id";
+    	res.status(400).json(result);
 	})
 	.delete(function(req,res){
 		var id = req.params.id;
@@ -98,6 +159,13 @@ router.route('/retrieve/:id')
 	});
 
 router.route('/extract')
+	.get(function(req,res){
+		var result = {};
+    	result.error = true;
+    	result.message = "Invalid Request. Only POST is exposed for this command.";
+    	result.arguments = "embed, [password], [filetype]. [optional]";
+    	res.status(400).json(result);
+	})
 	.post(function(req,res){
 		// has parameters {embed}, [password], [filetype] 
 		// returns embedded file
@@ -134,7 +202,21 @@ router.route('/extract')
 				hasCalled = true;	
 			}
 		});
-	});
+	})
+	.put(function(req,res){
+		var result = {};
+    	result.error = true;
+    	result.message = "Invalid Request. Only POST is exposed for this command.";
+    	result.arguments = "embed, [password], [filetype]. [optional]";
+    	res.status(400).json(result);
+    })
+    .delete(function(req,res){
+    	var result = {};
+    	result.error = true;
+    	result.message = "Invalid Request. Only POST is exposed for this command.";
+    	result.arguments = "embed, [password], [filetype]. [optional]";
+    	res.status(400).json(result);
+    });
 
 // REGISTER OUR ROUTES -------------------------------
 // all of our routes will be prefixed with /steganography
